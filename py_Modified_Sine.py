@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -21,7 +19,7 @@ Follower motion:
 # Design parameters
 
 h = 50.0        # lift (mm)
-Rp = 50.0       # not sure what was that (mm)
+Rp = 50.0       # prime circle radius (mm)
 Rf = 10.0       # Follower Radius (mm)
 
 total_angle = 360  # degrees (full cycle)
@@ -36,7 +34,7 @@ beta2 = 120.0   # dwell
 beta3 = 30.0    # fall 
 beta4 = 150.0   # dwell
 
-# Selction for minmum velocity : Modified Sine
+# Selction for minimum velocity : Modified Sine
 
 b = 0.25
 d = 0.75
@@ -152,37 +150,6 @@ def cam_motion(theta):
     else:
         return 0.0, 0.0, 0.0, 0.0, 0.0
 
-def check_continuity():
-
-    test_points = [x1 - 1e-6, x1, x1 + 1e-6, 
-                   x2 - 1e-6, x2, x2 + 1e-6,
-                   x3 - 1e-6, x3, x3 + 1e-6,
-                   x4 - 1e-6, x4, x4 + 1e-6]
-    
-    print("Continuity check at zone boundaries:")
-    for x in test_points:
-        if 0 <= x <= 1:
-            y, yp, ypp, yppp = norm_motion(x)
-            print(f"x={x:.6f}: y={y:.6f}, yp={yp:.6f}, ypp={ypp:.6f}, yppp={yppp:.6f}")
-
-
-# Plotting cam profile (Testing)
-
-def plot_cam_profile(df):
-    """Plot the cam profile (X vs Y coordinates)"""
-    plt.figure(figsize=(8, 8))
-    plt.plot(df['Cam_X_mm'], df['Cam_Y_mm'], 'b-', linewidth=2)
-    plt.xlabel('Cam X (mm)', fontsize=12)
-    plt.ylabel('Cam Y (mm)', fontsize=12)
-    plt.title('Cam Profile', fontsize=14, fontweight='bold')
-    plt.grid(True, alpha=0.3)
-    plt.axis('equal')  # Equal aspect ratio for true shape
-    plt.tight_layout()
-    plt.savefig('cam_profile.png', dpi=300)
-    plt.show()
-
-
-
 
 
 
@@ -199,12 +166,28 @@ for theta in np.arange(0, 361, 1):
     "Angle_deg": theta,
     "x_norm": round(x, 5),
     "s_mm": round(s, 5),
-    "v_mm_per_s": round(v, 6),      # Changed
-    "a_mm_per_s2": round(a, 6),     # Changed
-    "j_mm_per_s3": round(j, 6),     # Changed
+    "v_mm_per_s": round(v, 6),     
+    "a_mm_per_s2": round(a, 6),     
+    "j_mm_per_s3": round(j, 6),     
     "Cam_X_mm": round((r - Rf)*np.cos(th), 5),
     "Cam_Y_mm": round((r - Rf)*np.sin(th), 5)
     })
+
+def plot_cam_profile(df):
+    """Plot the cam profile (X vs Y coordinates)"""
+    plt.figure(figsize=(8, 8))
+    plt.plot(df['Cam_X_mm'], df['Cam_Y_mm'], 'b-', linewidth=2)
+    plt.xlabel('Cam X (mm)', fontsize=12)
+    plt.ylabel('Cam Y (mm)', fontsize=12)
+    plt.title('Cam Profile', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3)
+    plt.axis('equal')  # Equal aspect ratio for true shape
+    plt.tight_layout()
+    plt.savefig('cam_profile.png', dpi=300)
+    plt.show()
+
+
+# Outputs 
 
 
 df = pd.DataFrame(rows)
