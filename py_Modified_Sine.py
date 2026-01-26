@@ -1,6 +1,8 @@
+
+
 import numpy as np
 import pandas as pd
-
+import matplotlib.pyplot as plt
 
 """ 
 The Problem : 
@@ -21,6 +23,11 @@ Follower motion:
 h = 50.0        # lift (mm)
 Rp = 50.0       # not sure what was that (mm)
 Rf = 10.0       # Follower Radius (mm)
+
+total_angle = 360  # degrees (full cycle)
+cycle_time = 4.0   # seconds
+omega = np.radians(total_angle) / cycle_time  # rad/s
+
 
 # Durations (Degree)
 
@@ -111,37 +118,39 @@ def norm_motion(x):
         y = yp = ypp = yppp = 0.0
 
     return y, yp, ypp, yppp
-
 def cam_motion(theta):
-
     theta_rad = np.radians(theta)
     b1_rad = np.radians(beta1)
     b2_rad = np.radians(beta2)
     b3_rad = np.radians(beta3)
 
-    # rise
+    # Rise
     if theta_rad < b1_rad:
         x = theta_rad / b1_rad
         y, yp, ypp, yppp = norm_motion(x)
-        return h*y, (h/b1_rad)*yp, (h/b1_rad**2)*ypp, (h/b1_rad**3)*yppp, x
+        s = h * y
+        v = (h / b1_rad) * yp * omega           # mm/s
+        a = (h / b1_rad**2) * ypp * omega**2    # mm/s²
+        j = (h / b1_rad**3) * yppp * omega**3   # mm/s³
+        return s, v, a, j, x
 
     # Dwell
     elif theta_rad < (b1_rad + b2_rad):
-        
         return h, 0.0, 0.0, 0.0, 1.0
 
     # Fall
     elif theta_rad < (b1_rad + b2_rad + b3_rad):
-        # Normalize x from 0 to 1 for the fall duration
         x = (theta_rad - b1_rad - b2_rad) / b3_rad
         y, yp, ypp, yppp = norm_motion(x)
-        # Note: 1-y makes it go from h to 0
-        return h*(1-y), -(h/b3_rad)*yp, -(h/b3_rad**2)*ypp, -(h/b3_rad**3)*yppp, x
+        s = h * (1 - y)
+        v = -(h / b3_rad) * yp * omega          # mm/s
+        a = -(h / b3_rad**2) * ypp * omega**2   # mm/s²
+        j = -(h / b3_rad**3) * yppp * omega**3  # mm/s³
+        return s, v, a, j, x
 
     # Dwell
     else:
         return 0.0, 0.0, 0.0, 0.0, 0.0
-
 
 def check_continuity():
 
@@ -155,6 +164,22 @@ def check_continuity():
         if 0 <= x <= 1:
             y, yp, ypp, yppp = norm_motion(x)
             print(f"x={x:.6f}: y={y:.6f}, yp={yp:.6f}, ypp={ypp:.6f}, yppp={yppp:.6f}")
+
+
+# Plotting cam profile (Testing)
+
+def plot_cam_profile(df):
+    """Plot the cam profile (X vs Y coordinates)"""
+    plt.figure(figsize=(8, 8))
+    plt.plot(df['Cam_X_mm'], df['Cam_Y_mm'], 'b-', linewidth=2)
+    plt.xlabel('Cam X (mm)', fontsize=12)
+    plt.ylabel('Cam Y (mm)', fontsize=12)
+    plt.title('Cam Profile', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3)
+    plt.axis('equal')  # Equal aspect ratio for true shape
+    plt.tight_layout()
+    plt.savefig('cam_profile.png', dpi=300)
+    plt.show()
 
 
 
@@ -171,14 +196,14 @@ for theta in np.arange(0, 361, 1):
     th = np.radians(theta)
 
     rows.append({
-        "Angle_deg": theta,
-        "x_norm": round(x, 5),
-        "s_mm": round(s, 5),
-        "v_mm_per_deg": round(v, 6),
-        "a_mm_per_deg2": round(a, 6),
-        "j_mm_per_deg3": round(j, 6),   
-        "Cam_X_mm": round((r - Rf)*np.cos(th), 5),
-        "Cam_Y_mm": round((r - Rf)*np.sin(th), 5)
+    "Angle_deg": theta,
+    "x_norm": round(x, 5),
+    "s_mm": round(s, 5),
+    "v_mm_per_s": round(v, 6),      # Changed
+    "a_mm_per_s2": round(a, 6),     # Changed
+    "j_mm_per_s3": round(j, 6),     # Changed
+    "Cam_X_mm": round((r - Rf)*np.cos(th), 5),
+    "Cam_Y_mm": round((r - Rf)*np.sin(th), 5)
     })
 
 
@@ -186,3 +211,4 @@ df = pd.DataFrame(rows)
 df.to_excel("cam_modified_sine.xlsx", index=False)
 
 print("File:cam_modified_sine.xlsx")
+plot_cam_profile(df)
