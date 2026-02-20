@@ -2,19 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-""" 
-The Problem : 
-
-- Design the motion curves of a double-dwell cam to move a roller follower 50 mm.
-- Choose suitable parameters to minimize velocities for both rise and fall.
-- The total cycle must take 4 seconds.
-
-Follower motion:
-- Rise: 60 degrees
-- Dwell: 120 degrees
-- Fall: 30 degrees
-- Dwell: 150 degrees 
-"""
 
 # Design parameters
 
